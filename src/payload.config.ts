@@ -1,37 +1,105 @@
-// storage-adapter-import-placeholder
-import { mongooseAdapter } from '@payloadcms/db-mongodb'
-import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
-import path from 'path'
 import { buildConfig } from 'payload'
-import { fileURLToPath } from 'url'
-import sharp from 'sharp'
+import { s3Storage } from '@payloadcms/storage-s3'
+import { mongooseAdapter } from "@payloadcms/db-mongodb";
+import { lexicalEditor } from '@payloadcms/richtext-lexical'
 
-import { Users } from './collections/Users'
-import { Media } from './collections/Media'
+import path from "path";
+import Users from "./collections/Users";
+import Categories from "./collections/Categories";
+import Venues from "./collections/Venues";
+import Cuisine from "./collections/Cuisine";
+import Media from "./collections/Media";
+import Designer from "./collections/Designer";
+import Lists from "./collections/Navigation";
+import Globals from "./collections/Globals";
 
-const filename = fileURLToPath(import.meta.url)
-const dirname = path.dirname(filename)
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default buildConfig({
+  serverURL: process.env.PAYLOAD_URL,
+  secret: process.env.PAYLOAD_SECRET,
   admin: {
-    user: Users.slug,
-    importMap: {
-      baseDir: path.resolve(dirname),
-    },
+    user: Users.slug
   },
-  collections: [Users, Media],
-  editor: lexicalEditor(),
-  secret: process.env.PAYLOAD_SECRET || '',
-  typescript: {
-    outputFile: path.resolve(dirname, 'payload-types.ts'),
+  editor: lexicalEditor({}),
+  plugins: [
+    s3Storage({
+      collections: {
+        media: {
+          generateFileURL: ({ filename, prefix }) => {
+            return ['https://d3nidktcupd88v.cloudfront.net', prefix, filename]
+              .filter(Boolean)
+              .join('/');
+          },
+        },
+      },
+      bucket: process.env.S3_BUCKET,
+      config: {
+        endpoint: process.env.S3_ENDPOINT, // only include if you're using something like DigitalOcean Spaces
+        region: process.env.S3_REGION,
+        credentials: {
+          accessKeyId: process.env.S3_ACCESS_KEY_ID,
+          secretAccessKey: process.env.S3_SECRET_ACCESS_KEY,
+        },
+      },
+    }),
+  ],
+  localization:{
+    locales: [
+      {
+        code: 'nl',
+        label: {
+          nl: "Nederlands",
+          en: "Dutch",
+          fr: "Néerlandais"
+        }
+      },
+      {
+        code: 'en',
+        label: {
+          en: "English",
+          fr: "Anglais",
+          nl: "Engels"
+        }
+      },
+      {
+        code: 'fr',
+        label: {
+          fr: "Francais",
+          en: "French",
+          nl: "Frans"
+        }
+      }
+    ],
+    defaultLocale: 'en',
+    fallback: true
   },
   db: mongooseAdapter({
-    url: process.env.DATABASE_URI || '',
+    url: process.env.MONGODB_URI,
   }),
-  sharp,
-  plugins: [
-    payloadCloudPlugin(),
-    // storage-adapter-placeholder
+  //CORS
+  cors: [
+    "https://the-food-club-front.vercel.app",
+    "http://localhost:3000",
+    "https://p01--cms--j4bvc8vdjtjb.code.run/",
+    "vitals.vercel-insights.com",
+    "https://www.thefoodclub.be"
   ],
-})
+  //CSRF
+  csrf: [
+    "https://the-food-club-front.vercel.app",
+    "http://localhost:3000",
+    "https://p01--cms--j4bvc8vdjtjb.code.run/",
+    "vitals.vercel-insights.com",
+    "https://www.thefoodclub.be"
+  ],
+  collections: [Users, Venues, Categories, Cuisine, Designer, Media, Lists, Globals],
+  typescript: {
+    outputFile: path.resolve(__dirname, "payload-types.ts"),
+  },
+  graphQL: {
+    schemaOutputFile: path.resolve(__dirname, "generated-schema.graphql"),
+  },
+});

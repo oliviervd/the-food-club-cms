@@ -6,23 +6,105 @@
  * and re-run `payload generate:types` to regenerate this file.
  */
 
+/**
+ * Supported timezones in IANA format.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "supportedTimezones".
+ */
+export type SupportedTimezones =
+  | 'Pacific/Midway'
+  | 'Pacific/Niue'
+  | 'Pacific/Honolulu'
+  | 'Pacific/Rarotonga'
+  | 'America/Anchorage'
+  | 'Pacific/Gambier'
+  | 'America/Los_Angeles'
+  | 'America/Tijuana'
+  | 'America/Denver'
+  | 'America/Phoenix'
+  | 'America/Chicago'
+  | 'America/Guatemala'
+  | 'America/New_York'
+  | 'America/Bogota'
+  | 'America/Caracas'
+  | 'America/Santiago'
+  | 'America/Buenos_Aires'
+  | 'America/Sao_Paulo'
+  | 'Atlantic/South_Georgia'
+  | 'Atlantic/Azores'
+  | 'Atlantic/Cape_Verde'
+  | 'Europe/London'
+  | 'Europe/Berlin'
+  | 'Africa/Lagos'
+  | 'Europe/Athens'
+  | 'Africa/Cairo'
+  | 'Europe/Moscow'
+  | 'Asia/Riyadh'
+  | 'Asia/Dubai'
+  | 'Asia/Baku'
+  | 'Asia/Karachi'
+  | 'Asia/Tashkent'
+  | 'Asia/Calcutta'
+  | 'Asia/Dhaka'
+  | 'Asia/Almaty'
+  | 'Asia/Jakarta'
+  | 'Asia/Bangkok'
+  | 'Asia/Shanghai'
+  | 'Asia/Singapore'
+  | 'Asia/Tokyo'
+  | 'Asia/Seoul'
+  | 'Australia/Brisbane'
+  | 'Australia/Sydney'
+  | 'Pacific/Guam'
+  | 'Pacific/Noumea'
+  | 'Pacific/Auckland'
+  | 'Pacific/Fiji';
+
 export interface Config {
   auth: {
     users: UserAuthOperations;
   };
+  blocks: {};
   collections: {
     users: User;
+    venue: Venue;
+    categories: Category;
+    cuisine: Cuisine;
+    designer: Designer;
     media: Media;
+    lists: List;
+    globals: Global;
+    'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
+  };
+  collectionsJoins: {};
+  collectionsSelect: {
+    users: UsersSelect<false> | UsersSelect<true>;
+    venue: VenueSelect<false> | VenueSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    cuisine: CuisineSelect<false> | CuisineSelect<true>;
+    designer: DesignerSelect<false> | DesignerSelect<true>;
+    media: MediaSelect<false> | MediaSelect<true>;
+    lists: ListsSelect<false> | ListsSelect<true>;
+    globals: GlobalsSelect<false> | GlobalsSelect<true>;
+    'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
+    'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
+    'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
   };
   db: {
     defaultIDType: string;
   };
   globals: {};
-  locale: null;
+  globalsSelect: {};
+  locale: 'nl' | 'en' | 'fr';
   user: User & {
     collection: 'users';
+  };
+  jobs: {
+    tasks: unknown;
+    workflows: unknown;
   };
 }
 export interface UserAuthOperations {
@@ -49,8 +131,14 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  roles?: ('admin' | 'editor' | 'user')[] | null;
   updatedAt: string;
   createdAt: string;
+  enableAPIKey?: boolean | null;
+  apiKey?: string | null;
+  apiKeyIndex?: string | null;
   email: string;
   resetPasswordToken?: string | null;
   resetPasswordExpiration?: string | null;
@@ -62,11 +150,268 @@ export interface User {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "venue".
+ */
+export interface Venue {
+  id: string;
+  venueName: string;
+  /**
+   * pick the appropriate cuisine or cuisines served at this restaurant/venue
+   */
+  cuisineUsed?: (string | Cuisine)[] | null;
+  /**
+   * drinks served at this place
+   */
+  drinks?: (string | null) | Cuisine;
+  /**
+   * indicative price range per head - translates to number of € symbols on frontend (one : €, four: €€€€)
+   */
+  pricing?: ('one' | 'two' | 'three' | 'four') | null;
+  type: ('breakfast' | 'brunch' | 'lunch' | 'dinner' | 'market' | 'bar' | 'bakery' | 'snack')[];
+  website?: string | null;
+  phone?: string | null;
+  /**
+   * this is what the food club had to say (in short). - rule number 2. don't argue with the food club.
+   */
+  slugs?: {
+    /**
+     * short description that comes below the title. restrict to 1 or two sentences max!
+     */
+    slug?: {
+      root: {
+        type: string;
+        children: {
+          type: string;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    author?: (string | null) | User;
+  };
+  /**
+   * this is what the food club had to say. - rule number 2. don't argue with the food club.
+   */
+  reviews?: {
+    review?: {
+      root: {
+        type: string;
+        children: {
+          type: string;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    author?: (string | null) | User;
+  };
+  /**
+   * add a short text on what the Food Club orders when coming here, or any tips.
+   */
+  foodClubOrder?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  hours?:
+    | {
+        openDay?: ('Mo' | 'Tu' | 'We' | 'Thu' | 'Fr' | 'Sat' | 'Sun' | 'UNDEFINED') | null;
+        openFrom?: string | null;
+        openTill?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  otherOpeningHours?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  address?: {
+    street?: string | null;
+    houseNumber?: string | null;
+    city?: string | null;
+    postalCode?: string | null;
+    longitude?: number | null;
+    latitude?: number | null;
+  };
+  media?: {
+    hero?: (string | null) | Media;
+    gallery?:
+      | {
+          image?: (string | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  club?: ('brussels' | 'gent' | 'antwerp') | null;
+  /**
+   * NO SPACES! USE '-' INSTEAD. - example: 'antwerp-brussel' or 'gent-brussel'.
+   */
+  url?: string | null;
+  _status: 'draft' | 'pendingReview' | 'published';
+  /**
+   * is this venue currently selected as member of the food club?
+   */
+  status: 'yes' | 'alumni' | 'no';
+  /**
+   * tick to highlight this venue as new. - will be removed after a while.
+   */
+  new?: boolean | null;
+  /**
+   * tick if take-away possible.
+   */
+  takeAway?: boolean | null;
+  /**
+   * does this venue offer vegetarian menu?
+   */
+  vegetarian?: boolean | null;
+  /**
+   * does this venue offer vegan menu?
+   */
+  vegan?: boolean | null;
+  /**
+   * venue that needs to be visited by the foodclub.
+   */
+  toVisit?: boolean | null;
+  lastVisit?: string | null;
+  /**
+   * url to booking service (Resengo or other)
+   */
+  reservations?: string | null;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  seo?: {
+    title?: string | null;
+    description?: string | null;
+    keywords?: string | null;
+    image?: (string | null) | Media;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * collection of kitchens/cusines used to type venues
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cuisine".
+ */
+export interface Cuisine {
+  id: string;
+  name: string;
+  /**
+   * select the type to which this category belongs
+   */
+  type: 'drinks' | 'cuisine' | 'dish' | 'shop' | 'style';
+  /**
+   * write a short wiki-like text that explains what this category is about. This doesn't need to be formal, encyclopedic.
+   */
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * tick if this category needs to be displayed. - if unticked, the category keeps existing but isn't displayed on the website (homepage).
+   */
+  active?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "media".
  */
 export interface Media {
   id: string;
-  alt: string;
+  title: string;
+  alt?: string | null;
+  /**
+   * if a picture of  a dish on the menu, describe the dish in one or two sentences. Keep it short!
+   */
+  dish?: string | null;
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -78,6 +423,214 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    mobileThumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    mobileFriendly?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    tablet?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    original?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: string;
+  categoryTitle?: string | null;
+  categorySubTitles?: string | null;
+  /**
+   * brief description of the category.
+   */
+  categoryDescription?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  venues?: {
+    /**
+     * venues in category (order will be maintained)
+     */
+    venues?:
+      | {
+          venue?: (string | null) | Venue;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  media?: {
+    hero?: (string | null) | Media;
+  };
+  notes?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * tick if this category needs to be displayed. - if unticked, the category keeps existing but isn't displayed on the website.
+   */
+  active?: boolean | null;
+  url?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "designer".
+ */
+export interface Designer {
+  id: string;
+  name: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lists".
+ */
+export interface List {
+  id: string;
+  title?: string | null;
+  items?:
+    | {
+        item?:
+          | ({
+              relationTo: 'categories';
+              value: string | Category;
+            } | null)
+          | ({
+              relationTo: 'venue';
+              value: string | Venue;
+            } | null);
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "globals".
+ */
+export interface Global {
+  id: string;
+  texts?:
+    | {
+        title?: string | null;
+        text?: {
+          root: {
+            type: string;
+            children: {
+              type: string;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-locked-documents".
+ */
+export interface PayloadLockedDocument {
+  id: string;
+  document?:
+    | ({
+        relationTo: 'users';
+        value: string | User;
+      } | null)
+    | ({
+        relationTo: 'venue';
+        value: string | Venue;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: string | Category;
+      } | null)
+    | ({
+        relationTo: 'cuisine';
+        value: string | Cuisine;
+      } | null)
+    | ({
+        relationTo: 'designer';
+        value: string | Designer;
+      } | null)
+    | ({
+        relationTo: 'media';
+        value: string | Media;
+      } | null)
+    | ({
+        relationTo: 'lists';
+        value: string | List;
+      } | null)
+    | ({
+        relationTo: 'globals';
+        value: string | Global;
+      } | null);
+  globalSlug?: string | null;
+  user: {
+    relationTo: 'users';
+    value: string | User;
+  };
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -112,6 +665,283 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "users_select".
+ */
+export interface UsersSelect<T extends boolean = true> {
+  firstName?: T;
+  lastName?: T;
+  roles?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  enableAPIKey?: T;
+  apiKey?: T;
+  apiKeyIndex?: T;
+  email?: T;
+  resetPasswordToken?: T;
+  resetPasswordExpiration?: T;
+  salt?: T;
+  hash?: T;
+  loginAttempts?: T;
+  lockUntil?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "venue_select".
+ */
+export interface VenueSelect<T extends boolean = true> {
+  venueName?: T;
+  cuisineUsed?: T;
+  drinks?: T;
+  pricing?: T;
+  type?: T;
+  website?: T;
+  phone?: T;
+  slugs?:
+    | T
+    | {
+        slug?: T;
+        author?: T;
+      };
+  reviews?:
+    | T
+    | {
+        review?: T;
+        author?: T;
+      };
+  foodClubOrder?: T;
+  hours?:
+    | T
+    | {
+        openDay?: T;
+        openFrom?: T;
+        openTill?: T;
+        id?: T;
+      };
+  otherOpeningHours?: T;
+  address?:
+    | T
+    | {
+        street?: T;
+        houseNumber?: T;
+        city?: T;
+        postalCode?: T;
+        longitude?: T;
+        latitude?: T;
+      };
+  media?:
+    | T
+    | {
+        hero?: T;
+        gallery?:
+          | T
+          | {
+              image?: T;
+              id?: T;
+            };
+      };
+  club?: T;
+  url?: T;
+  _status?: T;
+  status?: T;
+  new?: T;
+  takeAway?: T;
+  vegetarian?: T;
+  vegan?: T;
+  toVisit?: T;
+  lastVisit?: T;
+  reservations?: T;
+  notes?: T;
+  seo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        keywords?: T;
+        image?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  categoryTitle?: T;
+  categorySubTitles?: T;
+  categoryDescription?: T;
+  venues?:
+    | T
+    | {
+        venues?:
+          | T
+          | {
+              venue?: T;
+              id?: T;
+            };
+      };
+  media?:
+    | T
+    | {
+        hero?: T;
+      };
+  notes?: T;
+  active?: T;
+  url?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "cuisine_select".
+ */
+export interface CuisineSelect<T extends boolean = true> {
+  name?: T;
+  type?: T;
+  description?: T;
+  notes?: T;
+  active?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "designer_select".
+ */
+export interface DesignerSelect<T extends boolean = true> {
+  name?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "media_select".
+ */
+export interface MediaSelect<T extends boolean = true> {
+  title?: T;
+  alt?: T;
+  dish?: T;
+  notes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        mobileThumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        mobileFriendly?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        tablet?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        original?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "lists_select".
+ */
+export interface ListsSelect<T extends boolean = true> {
+  title?: T;
+  items?:
+    | T
+    | {
+        item?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "globals_select".
+ */
+export interface GlobalsSelect<T extends boolean = true> {
+  texts?:
+    | T
+    | {
+        title?: T;
+        text?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-locked-documents_select".
+ */
+export interface PayloadLockedDocumentsSelect<T extends boolean = true> {
+  document?: T;
+  globalSlug?: T;
+  user?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-preferences_select".
+ */
+export interface PayloadPreferencesSelect<T extends boolean = true> {
+  user?: T;
+  key?: T;
+  value?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "payload-migrations_select".
+ */
+export interface PayloadMigrationsSelect<T extends boolean = true> {
+  name?: T;
+  batch?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
