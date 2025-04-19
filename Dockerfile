@@ -5,8 +5,8 @@ ENV NODE_ENV=production
 
 # ---- Dependencies layer ----
 FROM base AS deps
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json ./
+RUN pnpm install --frozen-lockfile
 
 # ---- Build layer ----
 FROM base AS builder
