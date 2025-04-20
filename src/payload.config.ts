@@ -21,7 +21,12 @@ export default buildConfig({
   serverURL: process.env.PAYLOAD_URL,
   secret: process.env.PAYLOAD_SECRET,
   admin: {
-    user: Users.slug
+    user: Users.slug,
+    autoLogin: {
+      email: 'demo@payloadcms.com',
+      password: 'demo',
+      prefillOnly: true,
+    },
   },
   editor: lexicalEditor({}),
   plugins: [
@@ -86,7 +91,7 @@ export default buildConfig({
     "https://p01--cms--j4bvc8vdjtjb.code.run/", // legacy instance (v 2.0)
     "https://p01--the-food-club-cms--zg6qw4mbhtcr.code.run", // new instance (v3.0)
     "vitals.vercel-insights.com",
-    "https://www.thefoodclub.be"
+    "https://www.thefoodclub.be",
   ],
   //CSRF
   csrf: [
