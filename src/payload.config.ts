@@ -9,7 +9,7 @@ import Categories from "./collections/Categories";
 import Venues from "./collections/Venues";
 import Cuisine from "./collections/Cuisine";
 import Media from "./collections/Media";
-import Designer from "./collections/Designer";
+import Designer from "./collect ions/Designer";
 import Lists from "./collections/Navigation";
 import Globals from "./collections/Globals";
 
