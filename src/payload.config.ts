@@ -83,7 +83,8 @@ export default buildConfig({
   cors: [
     "https://the-food-club-front.vercel.app",
     "http://localhost:3000",
-    "https://p01--cms--j4bvc8vdjtjb.code.run/",
+    "https://p01--cms--j4bvc8vdjtjb.code.run/", // legacy instance (v 2.0)
+    "https://p01--the-food-club-cms--zg6qw4mbhtcr.code.run", // new instance (v3.0)
     "vitals.vercel-insights.com",
     "https://www.thefoodclub.be"
   ],
@@ -91,7 +92,8 @@ export default buildConfig({
   csrf: [
     "https://the-food-club-front.vercel.app",
     "http://localhost:3000",
-    "https://p01--cms--j4bvc8vdjtjb.code.run/",
+    "https://p01--cms--j4bvc8vdjtjb.code.run/", // legacy instance (v 2.0)
+    "https://p01--the-food-club-cms--zg6qw4mbhtcr.code.run", // new instance (v3.0)
     "vitals.vercel-insights.com",
     "https://www.thefoodclub.be"
   ],
