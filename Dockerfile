@@ -26,7 +26,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/.next ./.next
 
-ENV PAYLOAD_CONFIG_PATH=src/payload.config.ts
+ENV PAYLOAD_CONFIG_PATH=src/app/(payload)/payload.config.ts
 
 EXPOSE 3000
 
